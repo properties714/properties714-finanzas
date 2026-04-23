@@ -1,4 +1,4 @@
-name: Deploy to Easypanel
+name: Deploy to VPS
 
 on:
   push:
@@ -8,7 +8,24 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Easypanel Deploy
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
         run: |
-          curl -s -X POST "https://panel.properties714.com/api/deploy/${{ secrets.EASYPANEL_DEPLOY_TOKEN }}"
-          echo "Deploy triggered"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 72.60.226.147 >> ~/.ssh/known_hosts
+
+      - name: Build & Deploy on VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key root@72.60.226.147 "
+            set -e
+            cd /tmp && rm -rf finanzas-build
+            git clone https://github.com/properties714/properties714-finanzas finanzas-build
+            cd finanzas-build
+            docker build -t easypanel/adminzeus/finanzas:latest .
+            docker service update --image easypanel/adminzeus/finanzas:latest adminzeus_finanzas
+            docker service update --force --env-add DEPLOY_TIMESTAMP=\$(date +%s) adminzeus_finanzas
+            echo 'Deploy complete'
+          "
