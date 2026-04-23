@@ -1,0 +1,14 @@
+name: Deploy to Easypanel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Easypanel Deploy
+        run: |
+          curl -s -X POST "https://panel.properties714.com/api/deploy/${{ secrets.EASYPANEL_DEPLOY_TOKEN }}"
+          echo "Deploy triggered"
