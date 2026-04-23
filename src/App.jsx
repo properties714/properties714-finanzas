@@ -7,18 +7,22 @@ import CategoryPieChart from './components/CategoryPieChart.jsx'
 import NetWorthChart from './components/NetWorthChart.jsx'
 import TransactionTable from './components/TransactionTable.jsx'
 import AddTransactionModal from './components/AddTransactionModal.jsx'
+import LoginGate from './components/LoginGate.jsx'
 
 const YEARS = ['Todos', '2024', '2025', '2026']
 const TABS = ['Resumen', 'Ingresos', 'Gastos', 'Transacciones']
 
 export default function App() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('p714_auth') === '1')
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [year, setYear] = useState('Todos')
   const [tab, setTab] = useState('Resumen')
   const [showAdd, setShowAdd] = useState(false)
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { if (authed) loadData() }, [authed])
+
+  if (!authed) return <LoginGate onAuth={() => setAuthed(true)} />
 
   async function loadData() {
     setLoading(true)
